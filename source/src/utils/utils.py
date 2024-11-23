@@ -9,6 +9,9 @@ import torch.nn.functional as F
 from utils.classificationnet import GCNSynthetic
 from torch.utils.data import DataLoader as dl
 import os
+import networkx as nx
+import matplotlib.pyplot as plt
+
 
 class Graph:
     def __init__(self, adj, features, labels, idx_train, idx_test, edge_index, norm_adj):
@@ -116,7 +119,6 @@ def train_model(args, g):
             'loss_val: {:.4f}'.format(loss_val.item()),
             'acc_val: {:.4f}'.format(acc_val.item()))
 
-
     def test():
         model.eval()
         output = model(feats, adj)
@@ -138,5 +140,52 @@ def train_model(args, g):
     torch.save(model.state_dict(), PATH)
 
     return model
-  
-  
+
+def find_ged_paths(G1, G2):
+    edit_paths = nx.optimize_edit_paths(G1, G2)
+    edit_paths = list(edit_paths)
+    min_path = edit_paths[0]
+    for path in edit_paths:
+        print(path)
+        if path[2] < min_path[2]:
+            min_path = path
+    
+    node_edits = min_path[0]
+    edge_edits = min_path[1]
+    ged = min_path[2]
+
+    changed_nodes = []
+    deleted_nodes = set()
+    added_nodes = set()
+
+    for u,v in node_edits:
+        if u == None:
+            added_nodes.add(v)
+        elif v == None:
+            deleted_nodes.add(u)
+        elif u != v:
+            changed_nodes.append([u,v])
+
+    changed_edges = []
+    deleted_edges = set()
+    added_edges = set()
+
+    print(edge_edits)
+    for e1,e2 in edge_edits:
+        if e1 == None:
+            added_edges.add(e2)
+        elif e2 == None:
+            deleted_edges.add(e1)
+        elif e1 != e2:
+            changed_edges.append([e1,e2])
+        
+    
+    return {'changed_nodes': changed_nodes, 'deleted_nodes': deleted_nodes, 
+            'added_nodes': added_nodes, 'changed_edges': changed_edges, 
+            'deleted_edges': deleted_edges, 'added_edges': added_edges}, ged
+    
+def visualize_nx(graph):
+  # Visualize the graph
+    nx.draw(graph, with_labels=True, node_color='lightblue', node_size=500, font_size=10)
+    plt.title("Graph Visualization")
+    plt.show()

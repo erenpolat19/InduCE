@@ -102,7 +102,7 @@ class SingleTrain(object):
         self.player_idx = []
         i=0
         for t in self.targets:
-            p = Player(self.graph, t, self.model, args).cuda()
+            p = Player(self.graph, t, self.model, args)
             #train only on instances that are correctly classified on extracting k-hop nbrs
             if(self.args.train_on_correct_only): 
                 if(self.graph.labels[t].to(args.device) == p.orig_out):
@@ -120,7 +120,7 @@ class SingleTrain(object):
             print("Number of instances: ", len(self.players))
         self.env = Env(self.players, self.args, torch.max(self.graph.labels)+1)
         #policy distribution depends on num
-        self.policy=switcher[self.args.policynet](self.args,self.env.statedim).cuda() #change - num_actions
+        self.policy=switcher[self.args.policynet](self.args,self.env.statedim) #change - num_actions
         self.opt = torch.optim.Adam(self.policy.parameters(), lr=self.args.rllr)
         self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.opt, [300, 600], gamma=0.1, last_epoch=-1)
     

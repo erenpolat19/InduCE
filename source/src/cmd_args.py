@@ -63,7 +63,9 @@ def get_options(args=None):
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--device', default='cuda', help='cpu or cuda.')
     parser.add_argument('--verbose', action='store_true', help='Set to print intermediate output')
-    
+    parser.add_argument('--callie_training', type=bool, default=False)
+
+
     args = parser.parse_args()
     print(args)
     return args

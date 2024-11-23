@@ -6,10 +6,10 @@ import time
 import torch.nn.functional as F
 import numpy as np
 import math
+import networkx as nx
 
 from utils.classificationnet import GCNSynthetic
 from utils.utils import *
-
 
 class Player(nn.Module):
     def __init__(self,G,t,model,args):
@@ -17,6 +17,7 @@ class Player(nn.Module):
         print("Target: ", t)
         self.G = G
         self.target = t
+        print(t)
         self.args = args
         self.cf_cand = []
         self.cf = None #changes for transductive setting
@@ -29,6 +30,16 @@ class Player(nn.Module):
         self.maxbudget = args.maxbudget
         self.reward_func=F.nll_loss
         self.cand_dict = self.getCandidates() 
+
+
+        self.G_target = nx.Graph(nx.from_numpy_array(self.G_orig.adj.numpy()))
+        edges_to_remove = [(6, 9), (8, 9), (10, 9), (12, 9)]
+        # Remove specified edges
+        self.G_target.remove_edges_from(edges_to_remove)
+
+        #visualize_nx(self.G_target)
+
+
        
     def setup(self):
         sub_adj, sub_feat, sub_labels, node_dict = get_neighbourhood(
@@ -46,7 +57,17 @@ class Player(nn.Module):
           
         g = Subgraph(sub_adj, sub_feat, sub_labels, node_dict, new_idx, rev_idx_dict)
         out = torch.argmax(out_sub[new_idx])
+
+
         return g, out_sub, out, sub_adj, sub_feat, sub_labels, node_dict, new_idx, rev_idx_dict
+
+    def GED(self):
+        print(self.G_curr.adj)
+        adj_curr_np = self.G_curr.adj.numpy()
+        G_cur_nx = nx.from_numpy_array(adj_curr_np)
+        changed_dict, ged = find_ged_paths(G_cur_nx, self.G_target)
+        return changed_dict, ged
+        
 
     def getCandidates(self):
         cand_dict = [] 
@@ -144,7 +165,18 @@ class Player(nn.Module):
         out_last = torch.argmax(out_probs_last[self.G_last.target_idx])
         out_curr = torch.argmax(out_probs_curr[self.G_curr.target_idx])
         # loss_pred indicator should be based on y_pred_new_actual NOT y_pred_new!
-        if(not self.args.scaled_rewards):
+        if self.args.callie_training:
+            print('CALLIE TRAINING ON')
+            changed_dict, ged = self.GED()
+            
+            norm_ged = ged / 20
+            print('GED:', ged, 'NORM GED:', norm_ged)
+            loss_total = 1 / (norm_ged + 1e-6)
+
+            loss_pred = 0
+            loss_graph_dist = 0
+    
+        elif(not self.args.scaled_rewards):
             loss_total, loss_pred, loss_graph_dist = self.loss(out_probs_curr[self.G_curr.target_idx],  out_probs_last[self.G_last.target_idx], out_last, out_curr)
         else:
             loss_total, loss_pred, loss_graph_dist = self.scaledReward(out_probs_curr[self.G_curr.target_idx],  out_probs_last[self.G_last.target_idx], out_last, out_curr)
@@ -153,7 +185,7 @@ class Player(nn.Module):
 
     def reset(self):
         self.opt = torch.optim.Adam(self.net.parameters(),lr=self.args.lr,weight_decay=5e-4)
-        self.allnodes_output = self.net(self.G_orig.feats.cuda(),self.G_orig.norm_adj.cuda()).detach()
+        self.allnodes_output = self.net(self.G_orig.feats,self.G_orig.norm_adj).detach()
         self.G_last = Subgraph(self.G_orig.adj.detach().clone(), self.G_orig.feats.detach().clone(), self.G_orig.labels.detach().clone(), self.G_orig.node_map, self.G_orig.target_idx, self.G_orig.reverse_map)
         self.G_curr = Subgraph(self.G_orig.adj.detach().clone(), self.G_orig.feats.detach().clone(), self.G_orig.labels.detach().clone(), self.G_orig.node_map, self.G_orig.target_idx, self.G_orig.reverse_map)
         self.cand_dict = self.getCandidates() 

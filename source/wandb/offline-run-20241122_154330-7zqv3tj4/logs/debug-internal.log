@@ -1,0 +1,16 @@
+{"time":"2024-11-22T15:43:30.065334-08:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-22T15:43:30.065375-08:00","level":"INFO","msg":"created symlink","path":"/Users/eren/Documents/GitHub/InduCE/source/wandb/offline-run-20241122_154330-7zqv3tj4/logs/debug-core.log"}
+{"time":"2024-11-22T15:43:30.171359-08:00","level":"INFO","msg":"created new stream","id":"7zqv3tj4"}
+{"time":"2024-11-22T15:43:30.171413-08:00","level":"INFO","msg":"writer: Do: started","stream_id":"7zqv3tj4"}
+{"time":"2024-11-22T15:43:30.171413-08:00","level":"INFO","msg":"handler: started","stream_id":"7zqv3tj4"}
+{"time":"2024-11-22T15:43:30.171428-08:00","level":"INFO","msg":"stream: started","id":"7zqv3tj4"}
+{"time":"2024-11-22T15:43:30.171443-08:00","level":"INFO","msg":"sender: started","stream_id":"7zqv3tj4"}
+{"time":"2024-11-22T15:43:30.17686-08:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-22T15:43:40.179117-08:00","level":"ERROR","msg":"monitor: cpu: error sampling metrics: input/output error"}
+{"time":"2024-11-22T15:44:22.007808-08:00","level":"INFO","msg":"stream: closing","id":"7zqv3tj4"}
+{"time":"2024-11-22T15:44:22.00808-08:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-22T15:44:22.009204-08:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-22T15:44:22.010121-08:00","level":"INFO","msg":"handler: closed","stream_id":"7zqv3tj4"}
+{"time":"2024-11-22T15:44:22.010143-08:00","level":"INFO","msg":"writer: Close: closed","stream_id":"7zqv3tj4"}
+{"time":"2024-11-22T15:44:22.010198-08:00","level":"INFO","msg":"sender: closed","stream_id":"7zqv3tj4"}
+{"time":"2024-11-22T15:44:22.010363-08:00","level":"INFO","msg":"stream: closed","id":"7zqv3tj4"}

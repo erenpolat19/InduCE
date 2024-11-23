@@ -73,10 +73,13 @@ class SingleTrain(object):
                 print("Number of non zero instances: ", idx.shape[0])
         else:
             self.targets = self.graph.idx_test #difficult 90:91, 20:21  easy 110:111 medium 38:39
+
         self.players = []
         self.player_idx = []
+
+        print(self.targets)
         i=0
-        for t in self.targets[1:2]:
+        for t in self.targets[:1]:
             p = Player(self.graph, t, self.model, args)
             if(self.args.train_on_correct_only):
                 # print(self.graph.labels[t], p.orig_out)
@@ -88,7 +91,7 @@ class SingleTrain(object):
                 self.players.append(p)
                 self.player_idx.append(i)
                 i+=1
-            
+        
         if(self.args.verbose):
             print("Number of instances: ", len(self.players))
         self.env = Env(self.players, self.args, torch.max(self.graph.labels)+1)
@@ -122,11 +125,9 @@ class SingleTrain(object):
         entropy_term = 0 
         b = self.maxbudget
         done = False
-        
-        orig_out = torch.argmax(self.model(self.players[playerid].G_orig.feats.to(self.args.device), self.players[playerid].G_orig.norm_adj.to(self.args.device))[self.players[playerid].G_orig.target_idx]).item() #self.graph.labels[self.players[playerid].target]#
-        curr_out = torch.argmax(self.model(self.players[playerid].G_curr.feats.to(self.args.device), self.players[playerid].G_curr.norm_adj.to(self.args.device))[self.players[playerid].G_curr.target_idx]).item()
-        
-        while (orig_out == curr_out and b>0 and len(self.players[playerid].cand_dict)>=1):
+        found_target = False
+
+        while (not found_target and b>0 and len(self.players[playerid].cand_dict)>=1):
             state = self.env.getState(playerid) 
             self.states.append(state)
           
@@ -147,11 +148,11 @@ class SingleTrain(object):
                 print("loss pred: ", loss_pred)
                 print("loss graph dist: ", loss_graph_dist)
 
-            curr_out = self.model(self.players[playerid].G_curr.feats.to(self.args.device), self.players[playerid].G_curr.norm_adj.to(self.args.device))[self.players[playerid].G_curr.target_idx]
-            curr_out = torch.argmax(curr_out).item()
+            if reward == 1/(1e-6): #ged is 0
+                found_target = True
             b-=1
         
-        if(orig_out != curr_out):
+        if(found_target):
             ## dump node_idx, new_idx, "cf_adj", "sub_adj", "y_pred_cf", "y_pred_orig",
             # "label", "num_nodes", "node_dict"
             if(self.players[playerid].cf == None):

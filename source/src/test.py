@@ -70,7 +70,7 @@ class Eval(object):
         self.chosen_targets = []
         i=0
         for t in self.targets:
-            p = Player(self.graph, t, self.model, args).cuda()
+            p = Player(self.graph, t, self.model, args)
             if(self.graph.labels[t].to(args.device) == p.orig_out):
                 self.players.append(p)
                 self.chosen_targets.append(t.item())
@@ -85,7 +85,7 @@ class Eval(object):
         eval_set.close() 
 
         self.env = Env(self.players, self.args, torch.max(self.graph.labels)+1)
-        self.policy = switcher[args.policynet](args,self.env.statedim).cuda()
+        self.policy = switcher[args.policynet](args,self.env.statedim)
         self.policy.load_state_dict(torch.load("./saved_models/{}/model_{}_{}.pt".format(args.dataset, args.dataset, args.save_prefix))['model_state_dict'])
        
         
