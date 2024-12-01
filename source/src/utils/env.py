@@ -80,11 +80,30 @@ class Env(object):
         self.statedim = self.getState(0)[0].shape[1]
         if(self.args.verbose):
             print("Dim of state: ", self.statedim)
+        self.prev_performance = [None] * self.nplayer  
+        self.lambda_penalty = 3.0
 
     def step(self,actions,playerid=0):
+        print("playerid: ", playerid, self.prev_performance[playerid])
         p = self.players[playerid]
         p.perturb(actions)
-        reward, loss_pred, loss_graph_dist  = p.oneStepReward() #reward = total_loss
+        reward, loss_pred, loss_graph_dist, ged  = p.oneStepReward() #reward = total_loss
+
+        current_performance = ged
+        penalty = 0
+        if self.prev_performance[playerid] is not None and current_performance > self.prev_performance[playerid]:
+            # penalty = self.lambda_penalty * (self.prev_performance - current_performance)
+            penalty = self.lambda_penalty * (current_performance - self.prev_performance[playerid]) ** 2
+
+            #if self.args.verbose:
+            perf = self.prev_performance[playerid]
+            print(f"Performance regression detected: Prev={perf:.4f}, Current={current_performance:.4f}, Penalty={penalty:.4f}")
+
+        final_reward = reward - penalty
+        print("reward: ", reward, "penalty: ", penalty, "final reward: ", final_reward)
+
+        self.prev_performance[playerid] = current_performance
+
         return reward, loss_pred, loss_graph_dist 
 
 
@@ -96,6 +115,7 @@ class Env(object):
 
     def reset(self,playerid=0):
         self.players[playerid].reset()
+        self.prev_performance[playerid] = None
 
     def makeState(self, labels, probs, deg, playerid, adj=None, multilabel=False):   
         entro = entropy(probs)

@@ -15,7 +15,7 @@ import torch
 args = get_options()
 torch.set_printoptions(precision=8)
 if(args.device == 'cuda'):
-    os.environ['CUDA_VISIBLE_DEVICES'] = "1" #set according to gpu avalaibility
+    os.environ['CUDA_VISIBLE_DEVICES'] = "-1" #set according to gpu avalaibility
 torch.manual_seed(args.seed)
 
 #no-kl, correct only, non-zero, deg changes
@@ -77,7 +77,7 @@ class SingleTrain(object):
         self.players = []
         self.player_idx = []
 
-        print(self.targets)
+        # print(self.targets)
         i=0
         for t in self.targets[:1]:
             p = Player(self.graph, t, self.model, args)
@@ -127,6 +127,9 @@ class SingleTrain(object):
         done = False
         found_target = False
 
+        orig_out = torch.argmax(self.model(self.players[playerid].G_orig.feats.to(self.args.device), self.players[playerid].G_orig.norm_adj.to(self.args.device))[self.players[playerid].G_orig.target_idx]).item() #self.graph.labels[self.players[playerid].target]#
+        curr_out = torch.argmax(self.model(self.players[playerid].G_curr.feats.to(self.args.device), self.players[playerid].G_curr.norm_adj.to(self.args.device))[self.players[playerid].G_curr.target_idx]).item()
+
         while (not found_target and b>0 and len(self.players[playerid].cand_dict)>=1):
             state = self.env.getState(playerid) 
             self.states.append(state)
@@ -150,6 +153,9 @@ class SingleTrain(object):
 
             if reward == 1/(1e-6): #ged is 0
                 found_target = True
+
+            curr_out = self.model(self.players[playerid].G_curr.feats.to(self.args.device), self.players[playerid].G_curr.norm_adj.to(self.args.device))[self.players[playerid].G_curr.target_idx]
+            curr_out = torch.argmax(curr_out).item()
             b-=1
         
         if(found_target):

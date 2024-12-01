@@ -170,7 +170,7 @@ def find_ged_paths(G1, G2):
     deleted_edges = set()
     added_edges = set()
 
-    print(edge_edits)
+    # print(edge_edits)
     for e1,e2 in edge_edits:
         if e1 == None:
             added_edges.add(e2)

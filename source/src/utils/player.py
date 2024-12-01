@@ -14,10 +14,10 @@ from utils.utils import *
 class Player(nn.Module):
     def __init__(self,G,t,model,args):
         super(Player,self).__init__()
-        print("Target: ", t)
+        # print("Target: ", t)
         self.G = G
         self.target = t
-        print(t)
+        # print(t)
         self.args = args
         self.cf_cand = []
         self.cf = None #changes for transductive setting
@@ -62,7 +62,7 @@ class Player(nn.Module):
         return g, out_sub, out, sub_adj, sub_feat, sub_labels, node_dict, new_idx, rev_idx_dict
 
     def GED(self):
-        print(self.G_curr.adj)
+        # print(self.G_curr.adj)
         adj_curr_np = self.G_curr.adj.numpy()
         G_cur_nx = nx.from_numpy_array(adj_curr_np)
         changed_dict, ged = find_ged_paths(G_cur_nx, self.G_target)
@@ -167,7 +167,9 @@ class Player(nn.Module):
         # loss_pred indicator should be based on y_pred_new_actual NOT y_pred_new!
         if self.args.callie_training:
             print('CALLIE TRAINING ON')
+            print('GED CALC START')
             changed_dict, ged = self.GED()
+            print('GED CALC END')
             
             norm_ged = ged / 20
             print('GED:', ged, 'NORM GED:', norm_ged)
@@ -176,12 +178,13 @@ class Player(nn.Module):
             loss_pred = 0
             loss_graph_dist = 0
     
+        # CHECK LOSS_TOTAL, it gets overwritten
         elif(not self.args.scaled_rewards):
             loss_total, loss_pred, loss_graph_dist = self.loss(out_probs_curr[self.G_curr.target_idx],  out_probs_last[self.G_last.target_idx], out_last, out_curr)
         else:
             loss_total, loss_pred, loss_graph_dist = self.scaledReward(out_probs_curr[self.G_curr.target_idx],  out_probs_last[self.G_last.target_idx], out_last, out_curr)
       
-        return loss_total, loss_pred, loss_graph_dist 
+        return loss_total, loss_pred, loss_graph_dist, ged
 
     def reset(self):
         self.opt = torch.optim.Adam(self.net.parameters(),lr=self.args.lr,weight_decay=5e-4)
