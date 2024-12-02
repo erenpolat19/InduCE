@@ -37,6 +37,10 @@ class Player(nn.Module):
         # Remove specified edges
         self.G_target.remove_edges_from(edges_to_remove)
 
+        print('G_orig')
+        print(self.G_orig.adj)
+        print(self.G_orig.feats)
+
         #visualize_nx(self.G_target)
 
 
